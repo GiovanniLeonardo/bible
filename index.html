@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Bible Reader & Study</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'Georgia', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 1.5rem); }
+        .pt-safe { padding-top: env(safe-area-inset-top, 1rem); }
+        /* Custom smooth scroll */
+        html { scroll-behavior: smooth; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.5); border-radius: 4px; }
+    </style>
+</head>
+<body class="h-full bg-stone-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300">
+
+    <!-- Top Header Banner -->
+    <header class="fixed top-0 left-0 right-0 z-40 backdrop-blur-xl bg-white/80 dark:bg-zinc-950/80 border-b border-zinc-200 dark:border-zinc-800 transition-colors">
+        <div class="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleMenu()" class="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all">
+                    <i data-lucide="menu" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+                </button>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/30">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    </div>
+                    <div class="flex flex-col items-start text-left">
+                        <span class="font-extrabold text-sm tracking-tight leading-none bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Bible AI</span>
+                        <span id="headerBookChapter" class="text-[11px] font-semibold text-zinc-500 mt-0.5">John 1 • WEB</span>
+                        <span id="headerVersion" class="hidden">WEB</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-1">
+                <button onclick="toggleSettings()" class="p-2.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="pt-24 pb-32 max-w-2xl mx-auto px-5">
+        
+        <!-- Tab Navigation Switcher -->
+        <div class="flex justify-center mb-6">
+            <div class="flex p-1 rounded-2xl bg-zinc-200/60 dark:bg-zinc-900 border border-zinc-300/60 dark:border-zinc-800">
+                <button onclick="switchTab('read')" id="tabReadBtn" class="px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-indigo-600 text-white shadow-md">
+                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i> Scripture
+                </button>
+                <button onclick="switchTab('bookmarks')" id="tabBookmarksBtn" class="px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
+                    <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> Saved <span id="bookmarkCountBadge">(0)</span>
+                </button>
+                <button onclick="switchTab('chat')" id="tabChatBtn" class="px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
+                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i> AI Scholar
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 1: SCRIPTURE -->
+        <div id="viewRead" class="space-y-6">
+            <h1 id="scriptureTitle" class="text-3xl md:text-4xl font-serif font-bold mb-8 text-center tracking-tight">John 1</h1>
+            
+            <div class="p-3 rounded-xl text-xs flex items-center gap-2 mb-4 bg-indigo-50 dark:bg-zinc-900 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-zinc-800">
+                <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500 shrink-0"></i>
+                <span><strong>Tip:</strong> Tap any word to look up its original Greek/Hebrew meaning instantly, or select text for Deep AI Research.</span>
+            </div>
+
+            <div id="scriptureContainer" class="space-y-6">
+                <!-- Scripture verses loaded here -->
+            </div>
+        </div>
+
+        <!-- TAB 2: BOOKMARKS -->
+        <div id="viewBookmarks" class="hidden space-y-4">
+            <h2 class="text-xl font-bold mb-4">Saved Verses & Notes</h2>
+            <div id="bookmarksList" class="space-y-4">
+                <!-- Bookmarks populated here -->
+            </div>
+        </div>
+
+        <!-- TAB 3: AI SCHOLAR CHAT -->
+        <div id="viewChat" class="hidden flex flex-col h-[70vh]">
+            <h2 class="text-xl font-bold mb-3">AI Biblical Scholar</h2>
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 rounded-2xl border bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 space-y-4 mb-4 shadow-inner">
+                <div class="flex justify-start">
+                    <div class="max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-bl-none">
+                        Shalom! I am your AI Biblical Scholar. Ask me anything about historical context, original Greek/Hebrew words, or theological themes in Scripture.
+                    </div>
+                </div>
+            </div>
+            <form onsubmit="handleSendChat(event)" class="flex gap-2">
+                <input type="text" id="chatInput" placeholder="Ask about verses, theology, or history..." class="flex-1 px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white outline-none text-sm focus:border-indigo-500">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 rounded-xl font-bold flex items-center justify-center active:scale-95 transition-all">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+
+    </main>
+
+    <!-- Chapter Navigation Bar -->
+    <div id="bottomNavBar" class="fixed bottom-0 left-0 right-0 z-30 border-t backdrop-blur-xl bg-white/90 dark:bg-zinc-950/90 border-zinc-200 dark:border-zinc-800 pb-safe transition-colors">
+        <div class="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
+            <button onclick="navigateChapter(-1)" class="p-3 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all">
+                <i data-lucide="chevron-left" class="w-6 h-6"></i>
+            </button>
+            <button onclick="toggleMenu()" class="text-sm font-semibold tracking-wide px-6 py-2 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 active:scale-95 transition-all">
+                <span id="navButtonText">John 1</span>
+            </button>
+            <button onclick="navigateChapter(1)" class="p-3 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all">
+                <i data-lucide="chevron-right" class="w-6 h-6"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Floating Action Button for AI Research -->
+    <div id="aiFab" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 hidden animate-bounce">
+        <button onclick="triggerAiResearchFromSelection()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-full shadow-2xl shadow-indigo-500/50 active:scale-95 transition-all">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span class="font-bold text-sm">Deep AI Research</span>
+        </button>
+    </div>
+
+    <!-- AI Research Modal / Bottom Sheet -->
+    <div id="aiModal" class="fixed inset-0 z-50 flex items-end opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeAiModal()"></div>
+        <div id="aiModalContent" class="relative w-full max-w-2xl mx-auto h-[88vh] rounded-t-3xl shadow-2xl flex flex-col transform translate-y-full transition-transform duration-300 ease-out bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800">
+            <div class="w-full flex justify-center pt-3 pb-2 cursor-pointer" onclick="closeAiModal()">
+                <div class="w-12 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700"></div>
+            </div>
+            <div class="px-6 pb-4 flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800">
+                <div class="flex items-center gap-2.5 text-indigo-600 dark:text-indigo-400">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    <h2 class="font-bold text-lg text-zinc-900 dark:text-white">Theological & Historical Research</h2>
+                </div>
+                <button onclick="closeAiModal()" class="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full active:scale-95">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                <div id="aiSelectedSnippetBox" class="p-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800/50">
+                    <p id="aiSnippetContext" class="text-xs text-indigo-600 dark:text-indigo-400 font-bold mb-1 uppercase tracking-wider">John 1</p>
+                    <p id="aiSnippetText" class="font-serif italic text-lg leading-relaxed text-zinc-800 dark:text-zinc-200">""</p>
+                </div>
+                <div id="aiResponseContainer" class="text-zinc-700 dark:text-zinc-300 font-sans text-[15px] space-y-3 pb-12">
+                    <!-- AI loading or markdown results -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chapter & Book Selector Drawer -->
+    <div id="menuDrawer" class="fixed inset-0 z-50 flex flex-col transform -translate-x-full transition-transform duration-300 ease-in-out bg-white dark:bg-zinc-950">
+        <div class="flex items-center justify-between px-4 h-16 border-b border-zinc-200 dark:border-zinc-800">
+            <h2 class="font-bold text-xl ml-2">Select Scripture</h2>
+            <button onclick="toggleMenu()" class="p-3 active:scale-95"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto flex">
+            <!-- Books List -->
+            <div id="booksListContainer" class="w-1/2 overflow-y-auto border-r border-zinc-200 dark:border-zinc-800">
+                <!-- Dynamically populated -->
+            </div>
+            <!-- Chapters Grid -->
+            <div class="w-1/2 overflow-y-auto p-4 bg-zinc-50/50 dark:bg-zinc-900/20">
+                <h3 id="chaptersHeaderTitle" class="font-bold text-center mb-6 text-zinc-500">Chapters</h3>
+                <div id="chaptersGridContainer" class="grid grid-cols-4 gap-2">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="toggleSettings()"></div>
+        <div class="relative w-full max-w-sm rounded-3xl shadow-2xl p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 scale-95 transition-transform duration-300" id="settingsModalBox">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-bold text-xl">Preferences</h2>
+                <button onclick="toggleSettings()" class="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full active:scale-95"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="space-y-6">
+                <div>
+                    <label class="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3 block">Bible Version</label>
+                    <div id="versionsList" class="space-y-2">
+                        <!-- Version items -->
+                    </div>
+                </div>
+                <div class="h-px w-full bg-zinc-200 dark:bg-zinc-800"></div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800" id="themeIconContainer">
+                            <i data-lucide="moon" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-[15px]">Dark Mode</p>
+                            <p class="text-xs text-zinc-500">Easier reading at night</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleDarkMode()" id="darkModeToggle" class="w-12 h-7 rounded-full transition-colors relative bg-zinc-300 dark:bg-indigo-600">
+                        <div id="darkModeDot" class="absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform left-1 dark:left-6"></div>
+                    </button>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-red-500">
+                            <i data-lucide="quote" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-[15px]">Red Letter Words</p>
+                            <p class="text-xs text-zinc-500">Highlight Jesus' spoken words</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleRedLetter()" id="redLetterToggle" class="w-12 h-7 rounded-full transition-colors relative bg-indigo-600">
+                        <div id="redLetterDot" class="absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform left-6"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Logic Script -->
+    <script>
+        // Bible Books Database
+        const BIBLE_BOOKS = [
+            { name: "Genesis", chapters: 50, test: "old" }, { name: "Exodus", chapters: 40, test: "old" },
+            { name: "Leviticus", chapters: 27, test: "old" }, { name: "Numbers", chapters: 36, test: "old" },
+            { name: "Deuteronomy", chapters: 34, test: "old" }, { name: "Joshua", chapters: 24, test: "old" },
+            { name: "Judges", chapters: 21, test: "old" }, { name: "Ruth", chapters: 4, test: "old" },
+            { name: "1 Samuel", chapters: 31, test: "old" }, { name: "2 Samuel", chapters: 24, test: "old" },
+            { name: "1 Kings", chapters: 22, test: "old" }, { name: "2 Kings", chapters: 25, test: "old" },
+            { name: "1 Chronicles", chapters: 29, test: "old" }, { name: "2 Chronicles", chapters: 36, test: "old" },
+            { name: "Ezra", chapters: 10, test: "old" }, { name: "Nehemiah", chapters: 13, test: "old" },
+            { name: "Esther", chapters: 10, test: "old" }, { name: "Job", chapters: 42, test: "old" },
+            { name: "Psalms", chapters: 150, test: "old" }, { name: "Proverbs", chapters: 31, test: "old" },
+            { name: "Ecclesiastes", chapters: 12, test: "old" }, { name: "Song of Solomon", chapters: 8, test: "old" },
+            { name: "Isaiah", chapters: 66, test: "old" }, { name: "Jeremiah", chapters: 52, test: "old" },
+            { name: "Lamentations", chapters: 5, test: "old" }, { name: "Ezekiel", chapters: 48, test: "old" },
+            { name: "Daniel", chapters: 12, test: "old" }, { name: "Hosea", chapters: 14, test: "old" },
+            { name: "Joel", chapters: 3, test: "old" }, { name: "Amos", chapters: 9, test: "old" },
+            { name: "Obadiah", chapters: 1, test: "old" }, { name: "Jonah", chapters: 4, test: "old" },
+            { name: "Micah", chapters: 7, test: "old" }, { name: "Nahum", chapters: 3, test: "old" },
+            { name: "Habakkuk", chapters: 3, test: "old" }, { name: "Zephaniah", chapters: 3, test: "old" },
+            { name: "Haggai", chapters: 2, test: "old" }, { name: "Zechariah", chapters: 14, test: "old" },
+            { name: "Malachi", chapters: 4, test: "old" },
+            { name: "Matthew", chapters: 28, test: "new" }, { name: "Mark", chapters: 16, test: "new" },
+            { name: "Luke", chapters: 24, test: "new" }, { name: "John", chapters: 21, test: "new" },
+            { name: "Acts", chapters: 28, test: "new" }, { name: "Romans", chapters: 16, test: "new" },
+            { name: "1 Corinthians", chapters: 16, test: "new" }, { name: "2 Corinthians", chapters: 13, test: "new" },
+            { name: "Galatians", chapters: 6, test: "new" }, { name: "Ephesians", chapters: 6, test: "new" },
+            { name: "Philippians", chapters: 4, test: "new" }, { name: "Colossians", chapters: 4, test: "new" },
+            { name: "1 Thessalonians", chapters: 5, test: "new" }, { name: "2 Thessalonians", chapters: 3, test: "new" },
+            { name: "1 Timothy", chapters: 6, test: "new" }, { name: "2 Timothy", chapters: 4, test: "new" },
+            { name: "Titus", chapters: 3, test: "new" }, { name: "Philemon", chapters: 1, test: "new" },
+            { name: "Hebrews", chapters: 13, test: "new" }, { name: "James", chapters: 5, test: "new" },
+            { name: "1 Peter", chapters: 5, test: "new" }, { name: "2 Peter", chapters: 3, test: "new" },
+            { name: "1 John", chapters: 5, test: "new" }, { name: "2 John", chapters: 1, test: "new" },
+            { name: "3 John", chapters: 1, test: "new" }, { name: "Jude", chapters: 1, test: "new" },
+            { name: "Revelation", chapters: 22, test: "new" }
+        ];
+
+        const VERSIONS = [
+            { id: 'web', name: 'World English Bible', short: 'WEB ver' },
+            { id: 'kjv', name: 'King James Version', short: 'KJV ver' },
+            { id: 'nkjv', name: 'New King James Version (Simulated)', short: 'NKJV ver' },
+            { id: 'nlt', name: 'New Living Translation (Simulated)', short: 'NLT ver' }
+        ];
+
+        // State variables
+        let currentBook = BIBLE_BOOKS[42]; // John
+        let currentChapter = 1;
+        let currentVersion = VERSIONS[0];
+        let versesData = [];
+        let bookmarks = JSON.parse(localStorage.getItem('bible_bookmarks') || '[]');
+        let isDarkMode = localStorage.getItem('bible_dark') === 'true' || window.matchMedia('(prefers-color-scheme: dark)').matches;
+        let isRedLetter = localStorage.getItem('bible_redletter') !== 'false';
+        let currentSelectedText = "";
+        let currentAiContext = "";
+        let chatMessages = [
+            { role: 'model', text: 'Shalom! I am your AI Biblical Scholar. Ask me anything about historical context, original Greek/Hebrew words, or theological themes in Scripture.' }
+        ];
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            applyTheme();
+            renderVersionsList();
+            renderBooksList();
+            renderChaptersGrid(currentBook);
+            fetchScripture();
+            updateBookmarksUI();
+            lucide.createIcons();
+
+            // Text selection listener for Deep AI Research FAB
+            document.addEventListener('selectionchange', () => {
+                const sel = window.getSelection();
+                const text = sel.toString().trim();
+                const fab = document.getElementById('aiFab');
+                if (text.length > 3 && text.length < 600) {
+                    currentSelectedText = text;
+                    currentAiContext = `${currentBook.name} ${currentChapter}`;
+                    fab.classList.remove('hidden');
+                } else if (text.length === 0) {
+                    fab.classList.add('hidden');
+                }
+            });
+        });
+
+        // Fetch Scripture
+        async function fetchScripture() {
+            const container = document.getElementById('scriptureContainer');
+            container.innerHTML = `
+                <div class="flex flex-col gap-4 animate-pulse mt-12">
+                    <div class="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-full"></div>
+                    <div class="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-5/6"></div>
+                    <div class="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-4/6"></div>
+                </div>
+            `;
+            const headerBookChapter = document.getElementById('headerBookChapter');
+            if (headerBookChapter) headerBookChapter.innerText = `${currentBook.name} ${currentChapter} • ${currentVersion.short}`;
+            
+            const headerVer = document.getElementById('headerVersion');
+            if (headerVer) headerVer.innerText = currentVersion.short;
+            
+            const navBtnText = document.getElementById('navButtonText');
+            if (navBtnText) navBtnText.innerText = `${currentBook.name} ${currentChapter}`;
+            
+            const scriptureTitle = document.getElementById('scriptureTitle');
+            if (scriptureTitle) scriptureTitle.innerText = `${currentBook.name} ${currentChapter}`;
+
+            try {
+                const qBook = currentBook.name.replace(/\s+/g, '+');
+                const res = await fetch(`https://bible-api.com/${qBook}+${currentChapter}?translation=web`);
+                if (!res.ok) throw new Error("Failed to fetch chapter");
+                const data = await res.json();
+                versesData = data.verses;
+                renderVerses();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) {
+                container.innerHTML = `<div class="text-center py-20 text-red-500">Failed to load scripture. Please check your network connection.</div>`;
+            }
+        }
+
+        // Render Verses with Red Letter & Word Click
+        function renderVerses() {
+            const container = document.getElementById('scriptureContainer');
+            container.innerHTML = '';
+
+            versesData.forEach(v => {
+                const verseDiv = document.createElement('div');
+                verseDiv.className = 'flex gap-3 relative group';
+
+                const isBookmarked = bookmarks.some(b => b.reference === `${currentBook.name} ${currentChapter}:${v.verse}`);
+                
+                const btn = document.createElement('button');
+                btn.className = `text-[11px] font-bold font-sans mt-2 min-w-[20px] select-none transition-colors hover:text-indigo-600 ${isBookmarked ? 'text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-zinc-400 dark:text-zinc-600'}`;
+                btn.innerText = v.verse;
+                btn.title = "Bookmark verse";
+                btn.onclick = () => toggleBookmark(v);
+
+                const textDiv = document.createElement('div');
+                textDiv.className = 'font-serif text-lg leading-[1.8] tracking-[0.01em] flex-1 text-zinc-800 dark:text-zinc-300';
+                
+                // Process words & red letter
+                textDiv.innerHTML = processVerseText(v.text);
+
+                // Add click listener for word studies
+                textDiv.querySelectorAll('.word-token').forEach(span => {
+                    span.onclick = (e) => {
+                        e.stopPropagation();
+                        const word = span.innerText.replace(/[^a-zA-Z]/g, '');
+                        if (word.length > 2) {
+                            currentSelectedText = word;
+                            currentAiContext = `${currentBook.name} ${currentChapter} (Word Study)`;
+                            triggerAiResearchFromSelection();
+                        }
+                    };
+                });
+
+                verseDiv.appendChild(btn);
+                verseDiv.appendChild(textDiv);
+                container.appendChild(verseDiv);
+            });
+        }
+
+        function processVerseText(text) {
+            const gospels = ["Matthew", "Mark", "Luke", "John", "Acts", "Revelation"];
+            const words = text.split(' ');
+            let inQuote = !isRedLetter ? false : gospels.includes(currentBook.name); // Simplified quote heuristic or full text coloring if in gospels
+
+            return words.map(w => {
+                const clean = w.replace(/[^a-zA-Z]/g, '');
+                const isJesusQuote = isRedLetter && gospels.includes(currentBook.name) && (w.includes('"') || w.includes('“') || w.includes('”') || true); // Default gospels text coloring for red letter simulation
+                const colorClass = (isRedLetter && gospels.includes(currentBook.name)) ? 'text-red-600 dark:text-red-400 font-medium' : '';
+                return `<span class="word-token cursor-pointer hover:bg-indigo-500/10 rounded px-0.5 transition-colors ${colorClass}">${w}</span>`;
+            }).join(' ');
+        }
+
+        // Deep AI Research trigger
+        async function triggerAiResearchFromSelection() {
+            document.getElementById('aiFab').classList.add('hidden');
+            const modal = document.getElementById('aiModal');
+            const modalBox = document.getElementById('aiModalContent');
+            const responseContainer = document.getElementById('aiResponseContainer');
+            
+            document.getElementById('aiSnippetContext').innerText = currentAiContext;
+            document.getElementById('aiSnippetText').innerText = `"${currentSelectedText}"`;
+            responseContainer.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-16 space-y-4">
+                    <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <p class="text-zinc-500 font-medium animate-pulse text-sm">Analyzing original Greek/Hebrew & historical context...</p>
+                </div>
+            `;
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalBox.classList.remove('translate-y-full');
+
+            try {
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                
+                const prompt = `The user is studying ${currentAiContext} and is examining this specific text/phrase/word: "${currentSelectedText}".
+                
+                Provide a rigorous, comprehensive theological and historical deep dive containing:
+                1. **Original Language Analysis**: Identify underlying Hebrew or Greek terms, Strong's concordance nuance, and exact definitions.
+                2. **Historical & Cultural Context**: What did this mean to the original audience?
+                3. **Spiritual & Theological Significance**: How does this tie into the broader message of Scripture?
+                
+                Format cleanly with markdown.`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: { parts: [{ text: "You are a world-class biblical scholar, historian, and linguist fluent in Koine Greek and Biblical Hebrew." }] }
+                };
+
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await res.json();
+                const textResult = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (textResult) {
+                    responseContainer.innerHTML = parseMarkdown(textResult);
+                } else {
+                    responseContainer.innerHTML = `<p class="text-red-500">Could not complete research at this time.</p>`;
+                }
+            } catch (err) {
+                responseContainer.innerHTML = `<p class="text-red-500">Network error connecting to AI theological engine.</p>`;
+            }
+        }
+
+        function closeAiModal() {
+            const modal = document.getElementById('aiModal');
+            const modalBox = document.getElementById('aiModalContent');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalBox.classList.add('translate-y-full');
+        }
+
+        // Markdown formatter helper
+        function parseMarkdown(text) {
+            let html = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-zinc-900 dark:text-zinc-100 font-semibold">$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                .replace(/\n\n/g, '</p><p class="mt-4 leading-relaxed">')
+                .replace(/\n- (.*?)/g, '<li class="ml-5 list-disc mt-2">$1</li>')
+                .replace(/## (.*?)\n/g, '<h3 class="text-lg font-bold mt-6 mb-2 text-zinc-900 dark:text-zinc-100">$1</h3>')
+                .replace(/### (.*?)\n/g, '<h4 class="text-md font-bold mt-4 mb-2 text-zinc-800 dark:text-zinc-200">$1</h4>');
+            return `<p class="leading-relaxed">${html}</p>`;
+        }
+
+        // Bookmarking
+        function toggleBookmark(verseObj) {
+            const ref = `${currentBook.name} ${currentChapter}:${verseObj.verse}`;
+            const idx = bookmarks.findIndex(b => b.reference === ref);
+            if (idx > -1) {
+                bookmarks.splice(idx, 1);
+            } else {
+                bookmarks.push({ reference: ref, text: verseObj.text, version: currentVersion.short });
+            }
+            localStorage.setItem('bible_bookmarks', JSON.stringify(bookmarks));
+            renderVerses();
+            updateBookmarksUI();
+        }
+
+        function updateBookmarksUI() {
+            document.getElementById('bookmarkCountBadge').innerText = `(${bookmarks.length})`;
+            const list = document.getElementById('bookmarksList');
+            if (bookmarks.length === 0) {
+                list.innerHTML = `<div class="text-center py-16 text-zinc-500"><p>No bookmarked verses yet. Tap verse numbers while reading to save them here.</p></div>`;
+                return;
+            }
+            list.innerHTML = bookmarks.map(b => `
+                <div class="p-5 rounded-2xl border bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">${b.reference}</span>
+                        <button onclick="removeBookmark('${b.reference}')" class="text-xs text-red-500 hover:underline">Remove</button>
+                    </div>
+                    <p class="font-serif italic text-base mb-3">"${b.text}"</p>
+                    <button onclick="triggerAiResearchCustom('${b.text}', '${b.reference}')" class="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-3 py-1.5 rounded-lg">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Deep AI Study on this Verse
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function removeBookmark(ref) {
+            bookmarks = bookmarks.filter(b => b.reference !== ref);
+            localStorage.setItem('bible_bookmarks', JSON.stringify(bookmarks));
+            renderVerses();
+            updateBookmarksUI();
+        }
+
+        function triggerAiResearchCustom(text, ref) {
+            currentSelectedText = text;
+            currentAiContext = ref;
+            triggerAiResearchFromSelection();
+        }
+
+        // Navigation
+        function navigateChapter(dir) {
+            if (dir === 1) {
+                if (currentChapter < currentBook.chapters) {
+                    currentChapter++;
+                    fetchScripture();
+                } else {
+                    const bIdx = BIBLE_BOOKS.findIndex(b => b.name === currentBook.name);
+                    if (bIdx < BIBLE_BOOKS.length - 1) {
+                        currentBook = BIBLE_BOOKS[bIdx + 1];
+                        currentChapter = 1;
+                        renderChaptersGrid(currentBook);
+                        fetchScripture();
+                    }
+                }
+            } else {
+                if (currentChapter > 1) {
+                    currentChapter--;
+                    fetchScripture();
+                } else {
+                    const bIdx = BIBLE_BOOKS.findIndex(b => b.name === currentBook.name);
+                    if (bIdx > 0) {
+                        currentBook = BIBLE_BOOKS[bIdx - 1];
+                        currentChapter = currentBook.chapters;
+                        renderChaptersGrid(currentBook);
+                        fetchScripture();
+                    }
+                }
+            }
+        }
+
+        // Drawer Menu & Book Selection
+        function toggleMenu() {
+            const drawer = document.getElementById('menuDrawer');
+            drawer.classList.toggle('-translate-x-full');
+        }
+
+        function renderBooksList() {
+            const container = document.getElementById('booksListContainer');
+            container.innerHTML = `
+                <div class="px-4 py-2.5 text-xs font-bold uppercase tracking-wider sticky top-0 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md text-zinc-400">Old Testament</div>
+                ${BIBLE_BOOKS.filter(b => b.test === 'old').map(b => `
+                    <button onclick="selectBook('${b.name}')" class="w-full text-left px-5 py-3.5 text-[15px] font-medium transition-colors ${currentBook.name === b.name ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold border-l-4 border-indigo-600' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900 border-l-4 border-transparent'}">${b.name}</button>
+                `).join('')}
+                <div class="px-4 py-2.5 mt-4 text-xs font-bold uppercase tracking-wider sticky top-0 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md text-zinc-400">New Testament</div>
+                ${BIBLE_BOOKS.filter(b => b.test === 'new').map(b => `
+                    <button onclick="selectBook('${b.name}')" class="w-full text-left px-5 py-3.5 text-[15px] font-medium transition-colors ${currentBook.name === b.name ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold border-l-4 border-indigo-600' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900 border-l-4 border-transparent'}">${b.name}</button>
+                `).join('')}
+            `;
+        }
+
+        function selectBook(bookName) {
+            currentBook = BIBLE_BOOKS.find(b => b.name === bookName);
+            currentChapter = 1;
+            renderChaptersGrid(currentBook);
+            renderBooksList();
+        }
+
+        function renderChaptersGrid(book) {
+            document.getElementById('chaptersHeaderTitle').innerText = `${book.name} Chapters`;
+            const grid = document.getElementById('chaptersGridContainer');
+            let html = '';
+            for (let i = 1; i <= book.chapters; i++) {
+                const active = currentChapter === i ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 border border-zinc-100 dark:border-zinc-700';
+                html += `<button onclick="selectChapter(${i})" class="aspect-square flex items-center justify-center rounded-xl text-lg font-medium active:scale-90 transition-all ${active}">${i}</button>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        function selectChapter(ch) {
+            currentChapter = ch;
+            toggleMenu();
+            fetchScripture();
+        }
+
+        // Settings Modal
+        function toggleSettings() {
+            const modal = document.getElementById('settingsModal');
+            const box = document.getElementById('settingsModalBox');
+            if (modal.classList.contains('opacity-0')) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                box.classList.remove('scale-95');
+            } else {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                box.classList.add('scale-95');
+            }
+        }
+
+        function renderVersionsList() {
+            const container = document.getElementById('versionsList');
+            container.innerHTML = VERSIONS.map(v => `
+                <button onclick="setVersion('${v.id}')" class="w-full flex items-center justify-between p-3 rounded-xl border transition-all ${currentVersion.id === v.id ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-semibold' : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800'}">
+                    <span class="text-[14px]">${v.name}</span>
+                    ${currentVersion.id === v.id ? '<i data-lucide="check" class="w-4 h-4"></i>' : ''}
+                </button>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function setVersion(id) {
+            currentVersion = VERSIONS.find(v => v.id === id);
+            renderVersionsList();
+            fetchScripture();
+            toggleSettings();
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('bible_dark', isDarkMode);
+            applyTheme();
+        }
+
+        function applyTheme() {
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleRedLetter() {
+            isRedLetter = !isRedLetter;
+            localStorage.setItem('bible_redletter', isRedLetter);
+            const dot = document.getElementById('redLetterDot');
+            const toggle = document.getElementById('redLetterToggle');
+            if (isRedLetter) {
+                toggle.classList.add('bg-indigo-600');
+                toggle.classList.remove('bg-zinc-300');
+                dot.classList.add('left-6');
+                dot.classList.remove('left-1');
+            } else {
+                toggle.classList.remove('bg-indigo-600');
+                toggle.classList.add('bg-zinc-300');
+                dot.classList.remove('left-6');
+                dot.classList.add('left-1');
+            }
+            renderVerses();
+        }
+
+        // Tabs switcher
+        function switchTab(tab) {
+            document.getElementById('viewRead').classList.add('hidden');
+            document.getElementById('viewBookmarks').classList.add('hidden');
+            document.getElementById('viewChat').classList.add('hidden');
+            document.getElementById('tabReadBtn').className = "px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white";
+            document.getElementById('tabBookmarksBtn').className = "px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white";
+            document.getElementById('tabChatBtn').className = "px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white";
+            
+            document.getElementById('bottomNavBar').style.display = tab === 'read' ? 'block' : 'none';
+
+            if (tab === 'read') {
+                document.getElementById('viewRead').classList.remove('hidden');
+                document.getElementById('tabReadBtn').className = "px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-indigo-600 text-white shadow-md";
+            } else if (tab === 'bookmarks') {
+                document.getElementById('viewBookmarks').classList.remove('hidden');
+                document.getElementById('tabBookmarksBtn').className = "px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-indigo-600 text-white shadow-md";
+            } else if (tab === 'chat') {
+                document.getElementById('viewChat').classList.remove('hidden');
+                document.getElementById('tabChatBtn').className = "px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-indigo-600 text-white shadow-md";
+            }
+        }
+
+        // AI Chat Handler
+        async function handleSendChat(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            input.value = '';
+            chatMessages.push({ role: 'user', text: msg });
+            renderChatMessages();
+
+            try {
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                
+                const historyPayload = chatMessages.map(m => ({
+                    role: m.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: m.text }]
+                }));
+
+                const payload = {
+                    contents: historyPayload,
+                    systemInstruction: { parts: [{ text: "You are a helpful, orthodox Christian AI Bible study companion. Provide grounded, insightful answers referencing Scripture." }] }
+                };
+
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                const reply = result.candidates?.[0]?.content?.parts?.[0]?.text || "I'm having trouble answering right now.";
+                chatMessages.push({ role: 'model', text: reply });
+                renderChatMessages();
+            } catch (err) {
+                chatMessages.push({ role: 'model', text: "Error connecting to AI chat service." });
+                renderChatMessages();
+            }
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = chatMessages.map(m => `
+                <div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}">
+                    <div class="max-w-[85%] p-4 rounded-2xl text-sm leading-relaxed ${m.role === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-bl-none'}">
+                        ${m.role === 'model' ? parseMarkdown(m.text) : m.text}
+                    </div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html>
