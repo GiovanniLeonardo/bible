@@ -47,19 +47,19 @@
     <main class="pt-24 max-w-2xl mx-auto px-5">
         
         <!-- TABS BAR -->
-        <div class="flex justify-center mb-6">
-            <div class="flex p-1 rounded-2xl border bg-zinc-200/60 border-zinc-300/60 dark:bg-zinc-900 dark:border-zinc-800">
-                <button onclick="switchTab('home')" id="tabHomeBtn" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 bg-indigo-600 text-white shadow-md">
-                    <i data-lucide="home" class="w-3.5 h-3.5"></i> Home
+        <div class="w-full max-w-md mx-auto mb-6">
+            <div class="grid grid-cols-4 gap-1 p-1 rounded-2xl border bg-zinc-200/60 border-zinc-300/60 dark:bg-zinc-900 dark:border-zinc-800">
+                <button onclick="switchTab('home')" id="tabHomeBtn" class="py-2.5 px-1 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 bg-indigo-600 text-white shadow-md">
+                    <i data-lucide="home" class="w-4 h-4"></i> <span>Home</span>
                 </button>
-                <button onclick="switchTab('read')" id="tabReadBtn" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
-                    <i data-lucide="book" class="w-3.5 h-3.5"></i> Scripture
+                <button onclick="switchTab('read')" id="tabReadBtn" class="py-2.5 px-1 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
+                    <i data-lucide="book" class="w-4 h-4"></i> <span>Scripture</span>
                 </button>
-                <button onclick="switchTab('bookmarks')" id="tabBookmarksBtn" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
-                    <i data-lucide="bookmark" class="w-3.5 h-3.5"></i> Saved (<span id="bookmarkCount">0</span>)
+                <button onclick="switchTab('bookmarks')" id="tabBookmarksBtn" class="py-2.5 px-1 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
+                    <i data-lucide="bookmark" class="w-4 h-4"></i> <span class="truncate">Saved</span>
                 </button>
-                <button onclick="switchTab('chat')" id="tabChatBtn" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
-                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i> AI Scholar
+                <button onclick="switchTab('chat')" id="tabChatBtn" class="py-2.5 px-1 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
+                    <i data-lucide="message-square" class="w-4 h-4"></i> <span class="truncate">AI Scholar</span>
                 </button>
             </div>
         </div>
@@ -783,13 +783,15 @@
                 bookmarks.push({ reference: ref, text: verseObj.text });
             }
             localStorage.setItem('bible_bookmarks', JSON.stringify(bookmarks));
-            document.getElementById('bookmarkCount').innerText = bookmarks.length;
+            const countEl = document.getElementById('bookmarkCount');
+            if (countEl) countEl.innerText = bookmarks.length;
             renderVerses();
             renderBookmarks();
         }
 
         function renderBookmarks() {
-            document.getElementById('bookmarkCount').innerText = bookmarks.length;
+            const countEl = document.getElementById('bookmarkCount');
+            if (countEl) countEl.innerText = bookmarks.length;
             const list = document.getElementById('bookmarksList');
             if (bookmarks.length === 0) {
                 list.innerHTML = `<div class="text-center py-16 text-zinc-500"><p>No bookmarks saved yet. Tap verse numbers to save them.</p></div>`;
